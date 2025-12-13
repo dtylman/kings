@@ -61,7 +61,7 @@ class Analyzer:
                     "response_json_schema": ChapterSummary.model_json_schema(),
                 }
             )
-            summary = ChapterSummary.model_validate(json.loads(response.text))
+            summary = ChapterSummary.model_validate(json.loads(response.text))               
         except Exception as e:
             print("Error during summarization:", e)
             print("Response was:", response.text)
@@ -69,9 +69,7 @@ class Analyzer:
         # word_count = len(summary.synopsis.split())
         # if word_count < 80 or word_count > 150:
         #         print(f"Synopsis word count ({word_count}) out of range (80-150). Requesting again...")
-        #         return self.summarize_chapter(book_number, chapter_number, chapter_text)
-        
-        print(summary.synopsis)
+        #         return self.summarize_chapter(book_number, chapter_number, chapter_text)            
         
         self.save_summary(book_number, chapter_number, summary)
         print(f"Chapter {book_number} {chapter_number} summarization complete.")    

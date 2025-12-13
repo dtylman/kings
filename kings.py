@@ -16,9 +16,14 @@ def main():
     kings = KingsText()
     analyzer = Analyzer()
     summarizer = Summarizer()
-    for chapter in range(1, 9):
+    for chapter in range(1, 22):
         txt = kings.download_chapter("I_Kings", chapter)        
         summary = analyzer.summarize_chapter("I_Kings", chapter, txt)
+        summarizer.set_summary(chapter, summary)        
+        
+    for chapter in range(1, 26):
+        txt = kings.download_chapter("II_Kings", chapter)        
+        summary = analyzer.summarize_chapter("II_Kings", chapter, txt)
         summarizer.set_summary(chapter, summary)
     
     summarizer.save()
