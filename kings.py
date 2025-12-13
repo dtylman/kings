@@ -19,7 +19,7 @@ def main():
     for chapter in range(1, 9):
         txt = kings.download_chapter("I_Kings", chapter)        
         summary = analyzer.summarize_chapter("I_Kings", chapter, txt)
-        summarizer.set_summary(summary)
+        summarizer.set_summary(chapter, summary)
     
     summarizer.save()
     
