@@ -2,6 +2,7 @@
 
 import os
 from kings_text import KingsText
+from analyzer import Analyzer
 from summarizer import Summarizer
 
 
@@ -13,12 +14,14 @@ def main():
         return
     
     kings = KingsText()
+    analyzer = Analyzer()
     summarizer = Summarizer()
-    
     for chapter in range(1, 9):
         txt = kings.download_chapter("I_Kings", chapter)        
-        summarizer.summarize_chapter("I_Kings", chapter, txt)
+        summary = analyzer.summarize_chapter("I_Kings", chapter, txt)
+        summarizer.set_summary(summary)
     
+    summarizer.save()
     
 if __name__ == "__main__":        
     main()

@@ -1,107 +1,44 @@
-import json
-import os
-from prompt_toolkit import prompt
-from pydantic import BaseModel, Field
-from typing import List
-from google import genai
-from hebrew_numbers import int_to_gematria
-
-class ImportantDetail(BaseModel):
-    name : str = Field(description="Put here the name of the character")
-    description: str = Field(description="Put here a one or two lines description of the character")
-    
-class ChapterSummary(BaseModel):
-    chapter : str = Field(description="Put here the book and chapter number in Hebrew, e.g., מלכים ב פרק א")
-    synopsis : str = Field(description="Put here 100 words synopsis of the chapter. ")
-    characters: List[ImportantDetail] = Field(description="Put here a list *ALL* characters mentioned in the chapter")
-    places: List[ImportantDetail] = Field(description="Put here a list places mentioned in the chapter")
+from analyzer import ChapterSummary
+from docx import Document
+from docx.shared import Pt, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 class Summarizer:
+    doc = None
     
     def __init__(self):
-        self.client = genai.Client()
-        
-        
-    def load_summary(self, book: str, chapter: int) -> ChapterSummary:
-        filename = self.get_summary_filename(book, chapter)
-        if not os.path.exists(filename):
-            raise FileNotFoundError(f"Summary file {filename} does not exist. Please summarize the chapter first.")
-        
-        with open(filename, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            return ChapterSummary.model_validate(data)
-        
-    def summarize_chapter(self, book_number:str, chapter_number: int, chapter_text: str) -> ChapterSummary:      
-        try:
-            existing_summary = self.load_summary(book_number, chapter_number)
-            print(f"Chapter {chapter_number} of {book_number} already summarized.")
-            return existing_summary
-        except FileNotFoundError:
-            pass        
-        
-        prompt = self.load_prompt_template("prompt.tmpl",{
-            "CHAPTER":int_to_gematria(chapter_number),
-            "BOOK_NAME":convert_book_name_to_hebrew(book_number),
-            "JSON_SAMPLE": load_response_sample(),
-            "TEXT": chapter_text
-            }
-            )
-        
-        system_instruction = self.load_prompt_template("system_instructions.tmpl",{})
-        
-        print(f"Chapter {book_number} {chapter_number} sending to Gemini for summarization...")
-        
-        try: 
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config={
-                    "system_instruction":system_instruction,
-                    "response_mime_type": "application/json",
-                    "response_json_schema": ChapterSummary.model_json_schema(),
-                }
-            )
-            summary = ChapterSummary.model_validate(json.loads(response.text))
-        except Exception as e:
-            print("Error during summarization:", e)
-            print("Response was:", response.text)
-        
-        # word_count = len(summary.synopsis.split())
-        # if word_count < 80 or word_count > 150:
-        #         print(f"Synopsis word count ({word_count}) out of range (80-150). Requesting again...")
-        #         return self.summarize_chapter(book_number, chapter_number, chapter_text)
-        
-        print(summary.synopsis)
-        
-        self.save_summary(book_number, chapter_number, summary)
-        print(f"Chapter {book_number} {chapter_number} summarization complete.")    
-        return summary
-        
-    def load_prompt_template(self, template_path: str, variables: dict) -> str:
-        with open(template_path, 'r', encoding='utf-8') as f:
-            template = f.read()
-        for key, value in variables.items():
-            template = template.replace(key, str(value))
-        return template
+        self.doc = Document()
+        # Add a title
+        title = self.doc.add_heading('Book of Kings - Chapter Summaries', 0)
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    def save_summary(self, book: str, chapter: int, summary: ChapterSummary):
-        filename = self.get_summary_filename(book, chapter)
-        print(f"Saving summary to {filename}...")
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write(summary.model_dump_json(indent=4, ensure_ascii=False))
-        print("Save complete.")
+    def set_summary(self, summary: ChapterSummary):
+        # Add chapter heading
+        heading = self.doc.add_heading(summary.chapter, level=1)
         
-    def get_summary_filename(self, book: str, chapter: int) -> str:                  
-        return os.path.join(os.getcwd(), "data", f"{book}_{chapter}.summary.json")
+        # Add synopsis paragraph
+        synopsis_heading = self.doc.add_heading('Synopsis:', level=2)
+        synopsis_para = self.doc.add_paragraph(summary.synopsis)
         
+        # Add characters section
+        if summary.characters:
+            chars_heading = self.doc.add_heading('Characters:', level=2)
+            for char in summary.characters:
+                char_para = self.doc.add_paragraph(style='List Bullet')
+                char_para.add_run(f"{char.name}: ").bold = True
+                char_para.add_run(char.description)
+        
+        # Add places section
+        if summary.places:
+            places_heading = self.doc.add_heading('Places:', level=2)
+            for place in summary.places:
+                place_para = self.doc.add_paragraph(style='List Bullet')
+                place_para.add_run(f"{place.name}: ").bold = True
+                place_para.add_run(place.description)
+        
+        # Add page break after each chapter (except we'll handle this in save)
+        self.doc.add_paragraph()
     
-def convert_book_name_to_hebrew(book_name: str) -> str:
-    book_mapping = {
-        "I_Kings": "מלכים א",
-        "II_Kings": "מלכים ב",
-    }
-    return book_mapping.get(book_name, book_name)
-
-def load_response_sample() -> str:
-    with open("response.tmpl", "r", encoding="utf-8") as f:
-        return f.read()
+    def save(self, filename='kings_summary.docx'):
+        self.doc.save(filename)
+        print(f"Summary saved to {filename}")
