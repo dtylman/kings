@@ -19,6 +19,7 @@ This is a proof-of-concept (PoC) project that explores how modern AI technology 
 - **AI-Powered Summarization**: Uses Google's Gemini AI to create concise chapter summaries
 - **Character Extraction**: Identifies and describes all characters mentioned in each chapter
 - **Location Mapping**: Lists and describes important places
+- **Interactive Timeline**: Visual timeline showing parallel reigns of kings in Israel and Judah
 - **Hebrew Support**: Full right-to-left (RTL) Hebrew text support
 - **Document Generation**: Creates a formatted Word document (.docx) with:
   - Chapter-by-chapter plot summaries with Hebrew numerals
@@ -69,6 +70,20 @@ The script will:
 2. Generate AI summaries for each chapter (if not already generated)
 3. Compile a comprehensive study document: `kings_summary.docx`
 
+### Timeline Visualization
+
+To view an interactive timeline of the kings' reigns:
+
+```bash
+./timeline.py
+```
+
+This will display a visual timeline showing:
+- Parallel reigns of kings in Israel (ישראל) and Judah (יהודה)
+- Reign periods with start and end dates
+- Hebrew labels for all rulers
+- Interactive zoom and pan capabilities
+
 ## 📂 Project Structure
 
 ```
@@ -77,6 +92,8 @@ kings/
 ├── kings_text.py         # Handles downloading and caching biblical texts
 ├── analyzer.py           # AI-powered chapter analysis using Gemini
 ├── summarizer.py         # Compiles summaries into a Word document
+├── timeline.py           # Generates interactive visual timeline of kings' reigns
+├── timeline_data.csv     # Timeline data with reign periods and rulers
 ├── prompt.tmpl           # Template for AI prompts (in Hebrew)
 ├── system_instructions.tmpl  # AI system instructions
 ├── response.tmpl         # JSON response format template
@@ -117,6 +134,13 @@ kings/
 - Processes all 25 chapters of II Kings
 - Coordinates the workflow from download to document generation
 
+### 5. Timeline Visualization (`timeline.py`)
+- Reads reign data from `timeline_data.csv`
+- Creates an interactive matplotlib visualization
+- Displays parallel timelines for Israel and Judah kingdoms
+- Supports Hebrew text with proper RTL rendering using `bidi` and `arabic_reshaper`
+- Features color-coded reigns and interactive navigation
+
 ## 📚 Example Output
 
 The generated document includes entries like:
@@ -143,5 +167,9 @@ This project demonstrates several important concepts for modern learners:
 - **Pydantic**: For structured data validation and schema definition
 - **python-docx**: For Word document generation with Hebrew/RTL support
 - **hebrew-numbers**: For converting chapter numbers to Hebrew numerals (gematria)
+- **matplotlib**: For interactive timeline visualization
+- **pandas**: For timeline data processing
+- **python-bidi**: For proper Hebrew text rendering (right-to-left)
+- **arabic-reshaper**: For complex Hebrew script support
 - **Sefaria API**: For accessing biblical texts
 
